@@ -7,18 +7,47 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script>
   var request = new XMLHttpRequest()
   request.open('GET', 'https://totalcloud-static.s3.amazonaws.com/intern.json', true)
   request.onload = function() {
     const tbody = document.getElementById('tbody');
-    var data = JSON.parse(this.response)
+    var data = JSON.parse(this.response);
+    let formatedData = [];
     console.log(data);
     data.forEach(item => {
       let tableRow = document.createElement('tr');
-      tableRow.innerHTML = `<td style="width: 10px;"> ${item.id}</td><td style="border-left: 1px solid;"><input type="checkbox" value=""> ${item.name}</td><td> ${item.start}</td> <td> ${item.start}</td>`;
+      tableRow.innerHTML = `<td style="width: 10px;"> ${item.id}</td><td style="border-left: 1px solid;"><input type="checkbox" value=""> ${item.name}</td><td> ${item.start}</td> <td> ${item.end}</td>`;
       tbody.appendChild(tableRow);
+      const startTime = item.start.split('/');
+      const endTime = item.end.split('/');
+      const startFormat =  new Date(startTime[2],startTime[1],startTime[0]);
+      const endFormat = new Date(endTime[2],endTime[1],endTime[0]);
+     formatedData.push([item.id.toString(), item.name ,startFormat ,endFormat])
   }); 
+  google.charts.load('current', {'packages':['timeline']});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        console.log(formatedData);
+        var container = document.getElementById('timeline');
+        var chart = new google.visualization.Timeline(container);
+        var dataTable = new google.visualization.DataTable();
+
+        dataTable.addColumn({ type: 'string', id: 'id' });
+        dataTable.addColumn({ type: 'string', id: 'name' });
+        dataTable.addColumn({ type: 'date', id: 'Start' });
+        dataTable.addColumn({ type: 'date', id: 'End' });
+        dataTable.addRows(
+       formatedData
+          );
+        var options = {
+          title: 'Oct 2019',
+          timeline: { showRowLabels: false },
+          height:"700"
+    };
+        chart.draw(dataTable, options);
+      }
 }
 
 request.send()
@@ -39,6 +68,8 @@ request.send()
     <tbody id="tbody"></tbody>
   </table>
 </div>
+<div id="timeline" style="height: max-content;"></div>
 
 </body>
 </html>
+
